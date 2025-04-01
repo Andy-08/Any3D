@@ -17,8 +17,8 @@ model.eval()
 transform = T.Compose([T.ToTensor()])
 
 # Define input and output directories
-input_dir = "./img"
-output_dir = "./output"
+input_dir = "./img_low"
+output_dir = "./output_low"
 os.makedirs(output_dir, exist_ok=True)
 
 # Process all images in the input directory
@@ -35,10 +35,11 @@ for image_name in os.listdir(input_dir):
 
     img_tensor = transform(image)
     images = [img_tensor]
-
+    t0 = time.time()
     # Perform inference
     with torch.no_grad():
         prediction = model(images)
+    print(f"Processed {image_name} in {time.time() - t0:.6f} seconds")
 
     # Extract prediction results
     boxes = prediction[0]['boxes'].cpu().numpy().astype(np.int32)
