@@ -8,9 +8,13 @@ import random
 import time
 import os
 
+# Check if GPU is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # 加载预训练的 Mask R-CNN 模型 (使用 ResNet-50 backbone)
 # model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(pretrained=True)
+model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(pretrained=True)#, weights="MaskRCNN_ResNet50_FPN_V2_Weights.DEFAULT")
+model = model.to(device)
 model.eval()
 
 # 定义图像预处理步骤
@@ -33,12 +37,14 @@ for image_name in os.listdir(input_dir):
         print(f"Error: Image not found at {image_path}")
         continue
 
-    img_tensor = transform(image)
+    img_tensor = transform(image).to(device)  # Move tensor to the same device as the model
     images = [img_tensor]
     t0 = time.time()
     # Perform inference
     with torch.no_grad():
         prediction = model(images)
+    # Move predictions back to CPU for further processing
+    prediction = [{k: v.cpu() for k, v in p.items()} for p in prediction]
     print(f"Processed {image_name} in {time.time() - t0:.6f} seconds")
 
     # Extract prediction results
