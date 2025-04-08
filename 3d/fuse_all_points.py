@@ -43,8 +43,6 @@ def main():
     # Adding a tactile point
     theta = 0
     phi = 0
-    contact_point_frame = tip_frame["if_tip"]["rotation_matrix"] @ R.from_euler('XYZ', [theta, phi, 0], 
-                                degrees=True).as_matrix() 
     # contact_point = tip_frame["if_tip"]["translation"] +  contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * 0.016
     point = cal_tactile_pointcloud(tip_frame["if_tip"]["translation"], tip_frame["if_tip"]["rotation_matrix"], theta, phi, 0.1)
     # point.append(contact_point)

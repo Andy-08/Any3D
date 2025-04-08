@@ -23,11 +23,12 @@ class Leaphand_FK():
         pinocchio.updateFramePlacements(self.model, self.data)        
 
     def update_model(self, state):
-        # Perform the forward kinematics over the kinematic tree
+        # swap the MCP1 and MCP2 joint
         state[0], state[1] = state[1], state[0]
         state[4], state[5] = state[5], state[4]
         state[8], state[9] = state[9], state[8]
         state[12], state[13] = state[13], state[12]
+        # Perform the forward kinematics over the kinematic tree
         pinocchio.forwardKinematics(self.model, self.data, state)
         pinocchio.updateFramePlacements(self.model, self.data)
 
@@ -111,7 +112,7 @@ class pointcloud_processor:
     def get_mesh_pointcloud(self, joint_pos, joint_pos_left=None):
         self.Leap_urdf.update_cfg(joint_pos)
         right_mesh = self._update_meshes("right_leap")  # Get the new updated mesh
-        robot_pc = right_mesh.sample_points_uniformly(number_of_points=800)
+        robot_pc = right_mesh.sample_points_uniformly(number_of_points=80000)
 
         # self.Leap_urdf_2.update_cfg(joint_pos_left)
         # left_mesh = self._update_meshes("left_leap")  # Get the new updated mesh
@@ -137,9 +138,11 @@ def transform_right_leap_pointcloud_to_base_frame(hand_pointcloud, pose_data):
     return points
 
 def cal_tactile_pointcloud(tip_frame_xyz, tip_frame_ori, theta, phi, force):
+    rad_of_dottip = 0.0152
+    point = []
     contact_point_frame = tip_frame_ori @ R.from_euler('XYZ', [theta, phi, 0], 
                             degrees=True).as_matrix()
-    contact_point_0 =   contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * 0.016
+    contact_point_0 =  contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * rad_of_dottip
     
     contact_point = tip_frame_xyz + create_circle_points(0.0016, 8, center=contact_point_0, ori=contact_point_frame)
     point = list(contact_point)
