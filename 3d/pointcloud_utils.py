@@ -138,16 +138,29 @@ def transform_right_leap_pointcloud_to_base_frame(hand_pointcloud, pose_data):
     return points
 
 def cal_tactile_pointcloud(tip_frame_xyz, tip_frame_ori, theta, phi, force):
+    theta = np.clip(theta, -45, 45)
+    phi = np.clip(phi, -45, 45)
+    force = np.clip(force, 0, 10)
+    total_num_points = int(force * 6)
     rad_of_dottip = 0.0152
-    point = []
     contact_point_frame = tip_frame_ori @ R.from_euler('XYZ', [theta, phi, 0], 
                             degrees=True).as_matrix()
-    contact_point_0 =  contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * rad_of_dottip
-    
-    contact_point = tip_frame_xyz + create_circle_points(0.0016, 8, center=contact_point_0, ori=contact_point_frame)
-    point = list(contact_point)
-    point.append(contact_point_0 + tip_frame_xyz)
-    return point
+    lamda = max(0.9, np.cos(np.deg2rad(theta)),  np.sin(np.deg2rad(phi)))
+    contact_point_0 =  contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * rad_of_dottip * lamda
+    points = contact_point_0 + tip_frame_xyz
+    i = 2
+    while i*i <= total_num_points and i <=5:
+        radius = (i-1)/5 * rad_of_dottip * 0.55
+        center = contact_point_0 / rad_of_dottip * np.sqrt(rad_of_dottip**2 - radius**2)
+        points = np.vstack((points, tip_frame_xyz + create_circle_points(radius, i*i*2, center, ori=contact_point_frame)))
+        i += 1
+        total_num_points -= i*i
+    if total_num_points > 0:
+        radius = (i-1)/5 * rad_of_dottip * 0.55
+        center = contact_point_0 / rad_of_dottip * np.sqrt(rad_of_dottip**2 - radius**2)
+        total_num_points = max(total_num_points, 4)
+        points = np.vstack((points, tip_frame_xyz + create_circle_points(radius, total_num_points*2, center, ori=contact_point_frame)))
+    return points
         
 def create_circle_points(radius, num_points, center, ori):
     """
@@ -170,6 +183,7 @@ def create_circle_points(radius, num_points, center, ori):
         center + radius * (np.cos(angle) * tangent + np.sin(angle) * bitangent)
         for angle in angles
     ])
+    print(points)
     return points
 
 # ==============for visualization=====================

@@ -43,8 +43,9 @@ def main():
     # Adding a tactile point
     theta = 0
     phi = 0
+    force = 10
     # contact_point = tip_frame["if_tip"]["translation"] +  contact_point_frame[:, 2] / np.linalg.norm(contact_point_frame[:, 2]) * 0.016
-    point = cal_tactile_pointcloud(tip_frame["if_tip"]["translation"], tip_frame["if_tip"]["rotation_matrix"], theta, phi, 0.1)
+    point = cal_tactile_pointcloud(tip_frame["if_tip"]["translation"], tip_frame["if_tip"]["rotation_matrix"], theta, phi, force)
     # point.append(contact_point)
     tac_point_pcd = o3d.geometry.PointCloud()
     tac_point_pcd.points = o3d.utility.Vector3dVector(point)
